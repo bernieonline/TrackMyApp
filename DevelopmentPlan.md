@@ -10,8 +10,8 @@ altitude: 0.0000
 MYBGACCOUNTS — PROJECT STATEMENT  
 SAVINGS & INVESTMENTS TRACKER (PWA)  
 \======================================================  
-Status: Draft — ready for build  
-Last updated: 2026-09-12
+Status: In progress — Stage 2 complete
+Last updated: 2026-09-13
 
 \------------------------------------------------------  
 1\. OVERVIEW  
@@ -83,8 +83,8 @@ Initial provider list (category in brackets):
   1. Natwest Current (Saving)  
   2. Natwest Credit Card (Saving)  
   3. Starling (Saving)  
-  4. Close Bros ISA Mary (Investment)  
-  5. Close Bros ISA Bernard (Investment)  
+  4. Close Bros ISA Mary (Saving)  
+  5. Close Bros ISA Bernard (Saving)  
   6. Nationwide (Saving)  
   7. Marcus Bernard (Saving)  
   8. Vanguard Bernard (Investment)  
@@ -261,14 +261,32 @@ Polish & testing:
 
 TOTAL ESTIMATE: ~12-16.5 working days (spread flexibly)
 
-\------------------------------------------------------  
-16\. OPEN QUESTIONS / NEXT STEPS  
-\------------------------------------------------------  
-\[ \] Confirm full initial provider list is complete  
-\[ \] Decide pie chart grouping level (categories vs per-  
-   provider vs toggle)  
-\[ \] Upload and clean historical spreadsheet (last 12 months)  
-\[ \] Register Azure app (OAuth client ID, redirect URIs)  
-\[ \] Choose static host (Cloudflare Pages or Netlify for  
-   private-repo support)  
-\[ \] Decide on PWA shell scaffold as first build step
+\------------------------------------------------------
+16\. CONFIRMED BUILD ORDER (2026-09-13)
+\------------------------------------------------------
+Stage 1: Provider data model + data entry screen (in-memory) [DONE]
+Stage 2: Totals, comments, localStorage draft autosave [DONE]
+Stage 3: Encryption module (isolated, Web Crypto AES-GCM) [NEXT]
+Stage 4: OneDrive auth (MSAL.js) + read/write + ETag conflict check
+Stage 5: Review/history views (paging, 3-month summary, pivot)
+Stage 6: Growth rates + charts (Chart.js)
+
+Additional v1 scope (from Suggestions.md):
+  - ETag-based concurrent-edit protection (Stage 4)
+  - localStorage draft autosave (Stage 2)
+  - Export decrypted data button (after Stage 4)
+  - Passphrase rotation (after Stage 4)
+
+Deferred:
+  - Pie chart grouping level — decide during build
+  - Historical data import — skipped for now
+
+\------------------------------------------------------
+17\. OPEN QUESTIONS / NEXT STEPS
+\------------------------------------------------------
+\[x\] Confirm full initial provider list is complete
+\[ \] Decide pie chart grouping level (during build)
+\[x\] Historical spreadsheet import — deferred
+\[ \] Register Azure app (OAuth client ID, redirect URIs)
+\[ \] Choose static host (Cloudflare Pages or Netlify)
+\[x\] Build order confirmed — start with Stage 1

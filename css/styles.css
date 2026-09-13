@@ -1,4 +1,497 @@
+/* styles.css — MyBGAccounts data entry view */
+
+/* ── CSS Custom Properties ── */
+:root {
+  --font-base: 16px;
+  --font-label: 1rem;
+  --font-input: 1rem;
+  --font-heading: 1.5rem;
+  --font-button: 0.95rem;
+  --row-height: 48px;
+  --input-height: 40px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --tap-target: 44px;
+
+  /* Colours */
+  --colour-bg: #f5f5f5;
+  --colour-surface: #ffffff;
+  --colour-text: #1a1a1a;
+  --colour-text-muted: #666666;
+  --colour-border: #d0d0d0;
+  --colour-row-even: #ffffff;
+  --colour-row-odd: #e8eef4;
+  --colour-header-bg: #2c3e50;
+  --colour-header-text: #ffffff;
+
+  /* Category colours */
+  --cat-saving: #27ae60;
+  --cat-investment: #2980b9;
+  --cat-pension: #8e44ad;
+  --cat-index: #e67e22;
+
+  /* Interactive */
+  --colour-primary: #2c3e50;
+  --colour-primary-hover: #34495e;
+  --colour-danger: #c0392b;
+  --colour-focus: #3498db;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-  margin: 40px;
+  font-size: var(--font-base);
+  color: var(--colour-text);
+  background: var(--colour-bg);
+  margin: 0;
+  padding: var(--spacing-md);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── Header ── */
+.app-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.app-brand {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--colour-header-bg);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.app-header h1 {
+  font-size: var(--font-heading);
+  color: var(--colour-header-bg);
+  margin: 0 0 var(--spacing-sm);
+}
+
+/* ── Controls bar (month/year + buttons) ── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+}
+
+.controls label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.controls select {
+  font-size: var(--font-input);
+  min-height: var(--tap-target);
+  padding: 6px 12px;
+  border: 1px solid var(--colour-border);
+  border-radius: 6px;
+  background: var(--colour-surface);
+  color: var(--colour-text);
+}
+
+.controls-spacer {
+  flex: 1;
+}
+
+/* ── Buttons ── */
+button {
+  font-size: var(--font-button);
+  font-family: inherit;
+  min-height: var(--tap-target);
+  min-width: var(--tap-target);
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-primary {
+  background: var(--colour-primary);
+  color: var(--colour-header-text);
+}
+
+.btn-primary:hover {
+  background: var(--colour-primary-hover);
+}
+
+.btn-edit {
+  background: #e8e8e8;
+  color: var(--colour-text);
+}
+
+.btn-edit:hover {
+  background: #d5d5d5;
+}
+
+.btn-edit.active {
+  background: var(--colour-focus);
+  color: white;
+}
+
+/* ── Provider table ── */
+.provider-table-wrapper {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  overflow-x: auto;
+}
+
+.provider-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.provider-table thead th {
+  background: var(--colour-header-bg);
+  color: var(--colour-header-text);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.provider-table thead th:last-child {
+  text-align: right;
+}
+
+.provider-table tbody tr {
+  height: var(--row-height);
+  transition: background 0.1s;
+}
+
+.provider-table tbody tr:nth-child(even) {
+  background: var(--colour-row-even);
+}
+
+.provider-table tbody tr:nth-child(odd) {
+  background: var(--colour-row-odd);
+}
+
+.provider-table tbody tr:hover {
+  background: #e8f0fe;
+}
+
+.provider-table td {
+  padding: 6px var(--spacing-md);
+  border-bottom: 1px solid var(--colour-border);
+  vertical-align: middle;
+}
+
+/* Category indicator dot */
+.category-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.category-dot.Saving     { background: var(--cat-saving); }
+.category-dot.Investment { background: var(--cat-investment); }
+.category-dot.Pension    { background: var(--cat-pension); }
+.category-dot.Index      { background: var(--cat-index); }
+
+/* Category label in edit mode */
+.category-label {
+  font-size: 0.85em;
+  color: var(--colour-text-muted);
+  margin-left: 4px;
+}
+
+/* Provider label cell */
+.provider-label {
+  font-weight: 500;
+}
+
+/* Editable label input */
+.label-input {
+  font-size: var(--font-input);
+  font-family: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--colour-border);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 280px;
+  min-height: 36px;
+}
+
+/* £ value input */
+.value-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.currency-symbol {
+  font-weight: 600;
+  margin-right: 4px;
+  color: var(--colour-text-muted);
+}
+
+.value-input {
+  font-size: var(--font-input);
+  font-family: inherit;
+  text-align: right;
+  width: 130px;
+  padding: 6px 10px;
+  border: 1px solid var(--colour-border);
+  border-radius: 4px;
+  min-height: var(--input-height);
+}
+
+.value-input:focus {
+  outline: 2px solid var(--colour-focus);
+  outline-offset: 1px;
+  border-color: var(--colour-focus);
+}
+
+/* Active checkbox in edit mode */
+.active-cell {
+  text-align: center;
+  width: 50px;
+}
+
+.active-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--colour-primary);
+}
+
+/* ── Add provider dialog ── */
+.dialog-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-overlay.open {
+  display: flex;
+}
+
+.dialog {
+  background: var(--colour-surface);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.dialog h2 {
+  margin: 0 0 var(--spacing-md);
+  font-size: 1.2rem;
+}
+
+.dialog .form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.dialog label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dialog input,
+.dialog select {
+  width: 100%;
+  font-size: var(--font-input);
+  font-family: inherit;
+  padding: 8px 12px;
+  border: 1px solid var(--colour-border);
+  border-radius: 6px;
+  min-height: var(--tap-target);
+}
+
+.dialog .dialog-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+/* ── Totals section ── */
+.totals-section {
+  margin-top: var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  overflow: hidden;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px var(--spacing-md);
+  border-bottom: 1px solid var(--colour-border);
+  font-weight: 600;
+}
+
+.totals-row:last-child {
+  border-bottom: none;
+}
+
+.totals-label {
+  flex: 1;
+}
+
+.totals-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Totals colour accents — left border */
+.totals-saving-investment {
+  border-left: 4px solid var(--cat-saving);
+}
+
+.totals-Saving {
+  border-left: 4px solid var(--cat-saving);
+}
+
+.totals-Investment {
+  border-left: 4px solid var(--cat-investment);
+}
+
+.totals-Pension {
+  border-left: 4px solid var(--cat-pension);
+}
+
+.totals-grand-total {
+  border-left: 4px solid var(--colour-primary);
+  background: #f0f4f8;
+  font-size: 1.05em;
+}
+
+/* ── Comments section ── */
+.comments-section {
+  margin-top: var(--spacing-md);
+}
+
+.comments-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.comment-box {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--font-input);
+  padding: 10px 12px;
+  border: 1px solid var(--colour-border);
+  border-radius: 8px;
+  background: var(--colour-surface);
+  resize: vertical;
+  min-height: 80px;
+}
+
+.comment-box:focus {
+  outline: 2px solid var(--colour-focus);
+  outline-offset: 1px;
+  border-color: var(--colour-focus);
+}
+
+/* ── Inactive row styling ── */
+tr.inactive-row {
+  opacity: 0.5;
+}
+
+/* ── iPad landscape (~1024px) ── */
+@media (min-width: 768px) {
+  body {
+    padding: var(--spacing-lg);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}
+
+/* ── Desktop (1200px+) ── */
+@media (min-width: 1200px) {
+  body {
+    max-width: 1100px;
+  }
+
+  :root {
+    --font-base: 17px;
+    --spacing-md: 20px;
+  }
+}
+
+/* ── 10ft / TV mode (1920px+) ── */
+@media (min-width: 1900px) {
+  :root {
+    --font-base: 26px;
+    --font-label: 1.1rem;
+    --font-input: 1.1rem;
+    --font-heading: 2rem;
+    --font-button: 1.1rem;
+    --row-height: 72px;
+    --input-height: 60px;
+    --spacing-sm: 14px;
+    --spacing-md: 28px;
+    --spacing-lg: 40px;
+    --tap-target: 60px;
+  }
+
+  body {
+    max-width: 1600px;
+    padding: var(--spacing-lg);
+  }
+
+  .provider-table thead th {
+    padding: var(--spacing-md);
+    font-size: 1.1em;
+  }
+
+  .provider-table td {
+    padding: 12px var(--spacing-md);
+  }
+
+  .category-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .value-input {
+    width: 200px;
+  }
+
+  .label-input {
+    max-width: 400px;
+  }
+
+  .active-checkbox {
+    width: 28px;
+    height: 28px;
+  }
+
+  .dialog {
+    min-width: 500px;
+    padding: var(--spacing-lg);
+  }
 }

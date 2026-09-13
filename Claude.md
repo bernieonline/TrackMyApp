@@ -32,8 +32,26 @@ expanding this file.
  instead of changing one)  
 \- Keep third-party dependencies minimal
 
-\## Current status  
-Pre-build. Spec and dev plan finalised. 
-see "D:\TrackMyApp 1.0\Dev Notes\Investments" for planning notes 
+## Decisions confirmed (2026-09-13)
+- Suggestions.md items 1-4 (ETag conflict detection, localStorage
+  draft autosave, export decrypted data, passphrase rotation) are
+  all in scope for v1
+- Chart pie-chart grouping level: deferred — decide during build
+- Date defaulting: use Spec Section 4 logic (current month if
+  previous month record exists, otherwise previous month)
+- Historical data import: skipped for now
 
+## Build order (staged milestones)
+1. Provider data model + data entry screen (in-memory, no persistence)
+2. Totals, comments, localStorage draft autosave
+3. Encryption module (isolated, Web Crypto AES-GCM)
+4. OneDrive auth (MSAL.js) + read/write with ETag conflict check
+5. Review/history views (paging, 3-month summary, pivot table)
+6. Growth rates + charts (Chart.js)
 
+## Current status
+Stage 2 complete. Totals section (5 colour-coded rows,
+Index excluded), comments textarea, and localStorage draft
+autosave all implemented. Data survives page reloads.
+Ready to begin Stage 3 (encryption module).
+See "Dev Notes/Investments" for original planning notes.

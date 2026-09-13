@@ -82,8 +82,8 @@ Initial provider list (category in brackets):
   1. Natwest Current (Saving)  
   2. Natwest Credit Card (Saving)  
   3. Starling (Saving)  
-  4. Close Bros ISA Mary (Investment)  
-  5. Close Bros ISA Bernard (Investment)  
+  4. Close Bros ISA Mary (Saving)  
+  5. Close Bros ISA Bernard (Saving)  
   6. Nationwide (Saving)  
   7. Marcus Bernard (Saving)  
   8. Vanguard Bernard (Investment)  
@@ -172,8 +172,31 @@ Comments box: free text, below totals.
  regardless of encryption — acceptable given no account  
  numbers are stored
 
-\------------------------------------------------------  
-11\. HISTORICAL DATA IMPORT - NOT NOW NEEDED  
+\------------------------------------------------------
+11\. DATA INTEGRITY & RECOVERY (from Suggestions.md)
+\------------------------------------------------------
+11a. Concurrent-edit protection
+  - Before uploading, check the OneDrive file's ETag against
+   what was loaded. If it has changed, warn the user to reload
+   rather than silently overwriting.
+
+11b. Draft autosave
+  - Save in-progress form data to browser localStorage as the
+   user types. Clear only after a successful OneDrive save.
+   Protects against token expiry, accidental tab close, or
+   app switch on iPad.
+
+11c. Export decrypted data
+  - "Export" button (behind passphrase) to download the full
+   dataset as decrypted JSON or CSV. Ensures the user is
+   never locked into this specific app.
+
+11d. Passphrase rotation
+  - Menu option to change passphrase: decrypt with old key,
+   re-encrypt with new key in a single operation.
+
+\------------------------------------------------------
+12\. HISTORICAL DATA IMPORT — DEFERRED
 \------------------------------------------------------  
 \- Source: single-page spreadsheet (last full year), needs  
  cleaning first (provider names, dates, duplicates/gaps)  
@@ -183,8 +206,8 @@ Comments box: free text, below totals.
 \- One-off import script/UI to bulk-load into the encrypted  
  OneDrive file
 
-\------------------------------------------------------  
-12\. DEVELOPMENT ESTIMATE  
+\------------------------------------------------------
+13\. DEVELOPMENT ESTIMATE  
 \------------------------------------------------------  
 NOTE: This is larger in scope than the original simple entry  
 form — provider CRUD, edit mode, review paging, pivot view,  
@@ -209,8 +232,8 @@ Polish & testing:
 
 REVISED TOTAL ESTIMATE: ~11-15 working days
 
-\------------------------------------------------------  
-13\. OPEN QUESTIONS / NEXT STEPS  
+\------------------------------------------------------
+14\. OPEN QUESTIONS / NEXT STEPS  
 \------------------------------------------------------  
 \[ \] Confirm full initial provider list is complete  
 \[ \] Upload and clean historical spreadsheet (last 12 months)  
