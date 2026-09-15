@@ -60,4 +60,7 @@ Stage 5 complete. Review/history views added:
 - OneDrive stores file at MyBGAccounts/mybgaccounts.dat
   (changed from AppFolder to visible root folder)
 - Scope changed from Files.ReadWrite.AppFolder to Files.ReadWrite
+- Deployed to GitHub Pages: https://bernieonline.github.io/TrackMyApp/
+- Repo is public; Azure SPA redirect URI configured for Pages URL
+- No Live Server dependency — both PC and iPad use the Pages URL
 Ready to begin Stage 6 (growth rates + charts).
