@@ -1,11 +1,24 @@
-// app.js — UI rendering, event handlers, edit mode
+// app.js — UI rendering, event handlers, edit mode, OneDrive flows
 
 let editMode = false;
 let selectedMonth;
 let selectedYear;
+let currentView = "entry"; // "entry" or "review"
+
+// ── Status overlay helpers ──
+function showStatus(message) {
+  document.getElementById("status-message").textContent = message;
+  document.getElementById("status-overlay").hidden = false;
+}
+
+function hideStatus() {
+  document.getElementById("status-overlay").hidden = true;
+}
 
 // ── Initialise ──
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await initMsal(); // Initialise MSAL client (must complete before sign-in works)
+
   loadDraft(); // Restore providers and entries from localStorage
 
   const def = getDefaultDate();
@@ -23,6 +36,24 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-add-cancel").addEventListener("click", closeAddDialog);
   document.getElementById("add-form").addEventListener("submit", onAddProvider);
   document.getElementById("comment-box").addEventListener("input", onCommentInput);
+  document.getElementById("btn-passphrase").addEventListener("click", onPassphraseButton);
+  document.getElementById("btn-signin").addEventListener("click", onSignIn);
+  document.getElementById("btn-signout").addEventListener("click", onSignOut);
+  document.getElementById("btn-save").addEventListener("click", onSave);
+  document.getElementById("btn-export").addEventListener("click", onExport);
+
+  // View toggle
+  document.getElementById("btn-view-entry").addEventListener("click", () => switchView("entry"));
+  document.getElementById("btn-view-review").addEventListener("click", () => switchView("review"));
+
+  // Review navigation
+  document.getElementById("btn-prev-month").addEventListener("click", () => stepMonth(-1));
+  document.getElementById("btn-next-month").addEventListener("click", () => stepMonth(1));
+  document.getElementById("btn-spreadsheet").addEventListener("click", openSpreadsheet);
+  document.getElementById("btn-close-spreadsheet").addEventListener("click", closeSpreadsheet);
+
+  updateLockIndicator();
+  updateAuthUI();
 });
 
 // ── Selectors ──
@@ -300,4 +331,223 @@ function onAddProvider(e) {
   closeAddDialog();
   render();
   saveDraft();
+}
+
+// ── Sign In (Microsoft + OneDrive load) ──
+async function onSignIn() {
+  const account = await signIn();
+  if (!account) return; // user cancelled popup
+
+  showStatus("Loading from OneDrive...");
+
+  try {
+    const encryptedBundle = await downloadFromOneDrive();
+
+    if (encryptedBundle === null) {
+      // First run — no file on OneDrive yet
+      hideStatus();
+      let result;
+      try {
+        result = await showPassphraseDialog("setup");
+      } catch (e) {
+        return; // cancelled
+      }
+
+      showStatus("Creating data file on OneDrive...");
+      const data = getExportData();
+      const bundle = await encryptData(data, result.passphrase);
+      await uploadToOneDrive(bundle);
+      saveDraft();
+      hideStatus();
+      alert("Data file created on OneDrive.");
+      render();
+    } else {
+      // File exists — prompt for passphrase to decrypt
+      hideStatus();
+      let result;
+      try {
+        result = await showPassphraseDialog("unlock");
+      } catch (e) {
+        return; // cancelled
+      }
+
+      showStatus("Decrypting...");
+      let data;
+      try {
+        data = await decryptData(encryptedBundle, result.passphrase);
+      } catch (err) {
+        hideStatus();
+        clearPassphrase();
+        alert("Decryption failed — wrong passphrase or corrupted data.");
+        return;
+      }
+
+      importData(data);
+      saveDraft(); // keep localStorage in sync
+
+      // Recalculate default date and re-render
+      const def = getDefaultDate();
+      selectedMonth = def.month;
+      selectedYear = def.year;
+      populateSelectors();
+      render();
+      hideStatus();
+    }
+  } catch (err) {
+    hideStatus();
+    console.error("OneDrive load failed:", err);
+    alert("Failed to load from OneDrive: " + err.message);
+  }
+}
+
+// ── Sign Out ──
+function onSignOut() {
+  if (!confirm("Sign out? Any unsaved changes will remain in your local draft.")) {
+    return;
+  }
+  signOut();
+}
+
+// ── Save to OneDrive ──
+async function onSave() {
+  if (!isSignedIn()) {
+    alert("Please sign in to Microsoft first.");
+    return;
+  }
+  if (!isUnlocked()) {
+    alert("Please enter your passphrase first.");
+    return;
+  }
+
+  showStatus("Saving to OneDrive...");
+
+  try {
+    const data = getExportData();
+    const bundle = await encryptData(data, getPassphrase());
+    await uploadToOneDrive(bundle);
+    saveDraft(); // keep localStorage in sync
+    hideStatus();
+
+    // Brief success feedback
+    const btn = document.getElementById("btn-save");
+    btn.textContent = "Saved";
+    btn.classList.add("btn-saved");
+    setTimeout(() => {
+      btn.textContent = "Save";
+      btn.classList.remove("btn-saved");
+    }, 2000);
+
+  } catch (err) {
+    hideStatus();
+    if (err instanceof ETagConflictError) {
+      alert(err.message);
+    } else {
+      console.error("Save failed:", err);
+      alert("Save failed: " + err.message);
+    }
+  }
+}
+
+// ── Export decrypted data (Spec 11c) ──
+function onExport() {
+  if (!isUnlocked()) {
+    showPassphraseDialog("unlock")
+      .then(() => doExport())
+      .catch(() => { /* cancelled */ });
+    return;
+  }
+  doExport();
+}
+
+function doExport() {
+  const data = getExportData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mybgaccounts-export-" + today + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Passphrase button ──
+async function onPassphraseButton() {
+  if (isUnlocked()) {
+    // Already unlocked — offer to change passphrase
+    let result;
+    try {
+      result = await showPassphraseDialog("change");
+    } catch (e) {
+      return; // cancelled
+    }
+
+    const { oldPassphrase, newPassphrase } = result;
+
+    // If signed in and file exists on OneDrive, do a full rotation
+    if (isSignedIn() && _lastETag) {
+      showStatus("Changing passphrase...");
+      try {
+        const latestBundle = await downloadFromOneDrive();
+        const newBundle = await changePassphrase(latestBundle, oldPassphrase, newPassphrase);
+        await uploadToOneDrive(newBundle);
+        _sessionPassphrase = newPassphrase;
+        updateLockIndicator();
+        hideStatus();
+        alert("Passphrase changed and saved to OneDrive.");
+      } catch (err) {
+        hideStatus();
+        if (err instanceof ETagConflictError) {
+          alert(err.message);
+        } else {
+          alert("Passphrase change failed: " + err.message);
+        }
+      }
+    } else {
+      // Not connected to OneDrive — just update session passphrase
+      _sessionPassphrase = newPassphrase;
+      updateLockIndicator();
+      alert("Session passphrase updated. Save to OneDrive to persist the change.");
+    }
+  } else {
+    // Not yet unlocked — set up or unlock
+    try {
+      await showPassphraseDialog("setup");
+      updateLockIndicator();
+    } catch (e) {
+      // cancelled
+    }
+  }
+}
+
+// ── View switching ──
+function switchView(view) {
+  currentView = view;
+
+  document.getElementById("entry-view").hidden = (view !== "entry");
+  document.getElementById("review-view").hidden = (view !== "review");
+
+  document.getElementById("btn-view-entry").classList.toggle("active", view === "entry");
+  document.getElementById("btn-view-review").classList.toggle("active", view === "review");
+
+  if (view === "review") {
+    initReview();
+  }
+}
+
+function openSpreadsheet() {
+  document.getElementById("spreadsheet-section").hidden = false;
+  document.getElementById("btn-spreadsheet").hidden = true;
+  document.getElementById("btn-close-spreadsheet").hidden = false;
+  renderSpreadsheet();
+}
+
+function closeSpreadsheet() {
+  document.getElementById("spreadsheet-section").hidden = true;
+  document.getElementById("btn-spreadsheet").hidden = false;
+  document.getElementById("btn-close-spreadsheet").hidden = true;
 }

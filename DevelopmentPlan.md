@@ -10,7 +10,7 @@ altitude: 0.0000
 MYBGACCOUNTS — PROJECT STATEMENT  
 SAVINGS & INVESTMENTS TRACKER (PWA)  
 \======================================================  
-Status: In progress — Stage 2 complete
+Status: In progress — Stage 5 complete
 Last updated: 2026-09-13
 
 \------------------------------------------------------  
@@ -266,9 +266,9 @@ TOTAL ESTIMATE: ~12-16.5 working days (spread flexibly)
 \------------------------------------------------------
 Stage 1: Provider data model + data entry screen (in-memory) [DONE]
 Stage 2: Totals, comments, localStorage draft autosave [DONE]
-Stage 3: Encryption module (isolated, Web Crypto AES-GCM) [NEXT]
-Stage 4: OneDrive auth (MSAL.js) + read/write + ETag conflict check
-Stage 5: Review/history views (paging, 3-month summary, pivot)
+Stage 3: Encryption module (isolated, Web Crypto AES-GCM) [DONE]
+Stage 4: OneDrive auth (MSAL.js) + read/write + ETag conflict check [DONE]
+Stage 5: Review/history views (paging, 3-month summary, pivot) [DONE]
 Stage 6: Growth rates + charts (Chart.js)
 
 Additional v1 scope (from Suggestions.md):

@@ -55,7 +55,21 @@ body {
 
 /* ── Header ── */
 .app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
+}
+
+.app-header h1 {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .app-brand {
@@ -70,7 +84,7 @@ body {
 .app-header h1 {
   font-size: var(--font-heading);
   color: var(--colour-header-bg);
-  margin: 0 0 var(--spacing-sm);
+  margin: 0;
 }
 
 /* ── Controls bar (month/year + buttons) ── */
@@ -414,6 +428,291 @@ button {
   outline: 2px solid var(--colour-focus);
   outline-offset: 1px;
   border-color: var(--colour-focus);
+}
+
+/* ── Lock indicator ── */
+.lock-indicator {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.lock-indicator.locked {
+  background: #fdecea;
+  color: var(--colour-danger);
+}
+
+.lock-indicator.unlocked {
+  background: #e8f5e9;
+  color: var(--cat-saving);
+}
+
+/* ── User display (signed-in name) ── */
+.user-display {
+  font-size: 0.85rem;
+  color: var(--colour-text-muted);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Status overlay (loading/saving feedback) ── */
+.status-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-overlay[hidden] {
+  display: none;
+}
+
+.status-message {
+  background: var(--colour-surface);
+  padding: var(--spacing-lg);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  min-width: 240px;
+}
+
+/* ── Save button success state ── */
+.btn-saved {
+  background: var(--cat-saving) !important;
+  color: white !important;
+}
+
+/* ── Passphrase error ── */
+.passphrase-error {
+  color: var(--colour-danger);
+  font-size: 0.9rem;
+  margin: 0 0 var(--spacing-sm);
+}
+
+/* ── View toggle ── */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+}
+
+.view-tab {
+  font-size: var(--font-button);
+  font-family: inherit;
+  font-weight: 600;
+  min-height: var(--tap-target);
+  padding: 8px 20px;
+  border: 2px solid var(--colour-border);
+  border-radius: 6px;
+  background: var(--colour-surface);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.view-tab.active {
+  background: var(--colour-primary);
+  color: var(--colour-header-text);
+  border-color: var(--colour-primary);
+}
+
+.view-tab:not(.active):hover {
+  background: #e8e8e8;
+}
+
+/* ── Review view ── */
+.review-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+}
+
+.review-month-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--colour-header-bg);
+  min-width: 180px;
+  text-align: center;
+}
+
+.review-comment {
+  padding: 10px 12px;
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-border);
+  border-radius: 8px;
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--colour-text);
+}
+
+/* ── 3-month summary ── */
+.summary-section {
+  margin-top: var(--spacing-md);
+}
+
+.summary-section h3 {
+  font-size: 1rem;
+  color: var(--colour-header-bg);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.summary-table-wrapper {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  overflow-x: auto;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary-table th {
+  background: var(--colour-header-bg);
+  color: var(--colour-header-text);
+  padding: 8px 12px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.summary-table th:first-child {
+  text-align: left;
+}
+
+.summary-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--colour-border);
+}
+
+.summary-label {
+  font-weight: 600;
+}
+
+.summary-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-table tbody tr:nth-child(even) {
+  background: var(--colour-row-even);
+}
+
+.summary-table tbody tr:nth-child(odd) {
+  background: var(--colour-row-odd);
+}
+
+.summary-table tbody tr:last-child {
+  font-weight: 700;
+  background: #f0f4f8;
+}
+
+/* ── Spreadsheet / pivot table ── */
+.spreadsheet-controls {
+  margin-top: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.spreadsheet-section {
+  margin-top: var(--spacing-md);
+}
+
+.spreadsheet-wrapper {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  overflow-x: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.spreadsheet-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.spreadsheet-table th {
+  background: var(--colour-header-bg);
+  color: var(--colour-header-text);
+  padding: 6px 10px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.spreadsheet-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--colour-border);
+  white-space: nowrap;
+}
+
+.spreadsheet-provider {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--colour-surface);
+  z-index: 1;
+  font-weight: 500;
+}
+
+th.spreadsheet-provider {
+  z-index: 3;
+  background: var(--colour-header-bg);
+}
+
+.spreadsheet-month {
+  text-align: right;
+}
+
+.spreadsheet-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.spreadsheet-zero {
+  color: var(--colour-text-muted);
+  opacity: 0.5;
+}
+
+.spreadsheet-totals {
+  border-top: 2px solid var(--colour-header-bg);
+  background: #f0f4f8 !important;
+}
+
+.spreadsheet-table tbody tr:nth-child(even) {
+  background: var(--colour-row-even);
+}
+
+.spreadsheet-table tbody tr:nth-child(odd) {
+  background: var(--colour-row-odd);
 }
 
 /* ── Inactive row styling ── */

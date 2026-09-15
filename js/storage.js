@@ -26,3 +26,26 @@ function loadDraft() {
     console.warn("Failed to load draft:", e);
   }
 }
+
+/**
+ * Bundle all app data into a single object for encryption/export.
+ * This is the shape that gets encrypted before uploading to OneDrive.
+ */
+function getExportData() {
+  return {
+    providers: providers,
+    entries: entries,
+  };
+}
+
+/**
+ * Restore app state from a decrypted data bundle.
+ */
+function importData(data) {
+  if (data.providers) {
+    loadProviders(data.providers);
+  }
+  if (data.entries) {
+    loadEntries(data.entries);
+  }
+}

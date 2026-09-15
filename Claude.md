@@ -50,8 +50,14 @@ expanding this file.
 6. Growth rates + charts (Chart.js)
 
 ## Current status
-Stage 2 complete. Totals section (5 colour-coded rows,
-Index excluded), comments textarea, and localStorage draft
-autosave all implemented. Data survives page reloads.
-Ready to begin Stage 3 (encryption module).
-See "Dev Notes/Investments" for original planning notes.
+Stage 5 complete. Review/history views added:
+- Entry/Review toggle tabs in the UI
+- Review mode: read-only month view with arrow navigation,
+  only non-zero providers shown, comments, totals
+- 3-month summary table below review view
+- Spreadsheet/pivot view: 12-month table, all providers,
+  horizontally scrollable, sticky headers and provider column
+- OneDrive stores file at MyBGAccounts/mybgaccounts.dat
+  (changed from AppFolder to visible root folder)
+- Scope changed from Files.ReadWrite.AppFolder to Files.ReadWrite
+Ready to begin Stage 6 (growth rates + charts).

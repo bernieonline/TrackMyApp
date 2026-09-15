@@ -69,3 +69,57 @@ function loadEntries(data) {
     entries[k] = data[k];
   });
 }
+
+/**
+ * Returns sorted array of year-month keys that have data.
+ * E.g. ["2025-09", "2025-10", "2026-01"]
+ */
+function getMonthsWithData() {
+  return Object.keys(entries)
+    .filter(k => hasEntry(k))
+    .sort();
+}
+
+/**
+ * Step one month backward from a YYYY-MM string.
+ */
+function getPreviousMonth(yearMonth) {
+  const [y, m] = yearMonth.split("-").map(Number);
+  if (m === 1) return formatYearMonth(y - 1, 12);
+  return formatYearMonth(y, m - 1);
+}
+
+/**
+ * Step one month forward from a YYYY-MM string.
+ */
+function getNextMonth(yearMonth) {
+  const [y, m] = yearMonth.split("-").map(Number);
+  if (m === 12) return formatYearMonth(y + 1, 1);
+  return formatYearMonth(y, m + 1);
+}
+
+/**
+ * Format a YYYY-MM string as a readable label, e.g. "August 2026".
+ */
+function formatMonthLabel(yearMonth) {
+  const [y, m] = yearMonth.split("-").map(Number);
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  return monthNames[m - 1] + " " + y;
+}
+
+/**
+ * Get the last N months ending at yearMonth (inclusive).
+ * Returns array of YYYY-MM strings, oldest first.
+ */
+function getMonthRange(yearMonth, count) {
+  const months = [yearMonth];
+  let current = yearMonth;
+  for (let i = 1; i < count; i++) {
+    current = getPreviousMonth(current);
+    months.unshift(current);
+  }
+  return months;
+}
