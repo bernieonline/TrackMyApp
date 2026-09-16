@@ -552,7 +552,11 @@ function switchView(view) {
   document.getElementById("btn-view-reports").classList.toggle("active", view === "reports");
 
   if (view === "review") initReview();
-  if (view === "reports") initReports();
+  if (view === "reports") {
+    // Defer chart init to next frame so the container is visible and
+    // Chart.js can measure its actual dimensions.
+    requestAnimationFrame(() => initReports());
+  }
 }
 
 function openSpreadsheet() {
