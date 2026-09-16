@@ -35,7 +35,7 @@ function renderReview() {
   tbody.innerHTML = "";
 
   if (!entry || Object.keys(entry.values).length === 0) {
-    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#666;padding:20px">No data for this month</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#666;padding:20px">No data for this month</td></tr>';
   } else {
     // Get providers with values, sorted by category order
     const providersWithValues = allProviders.filter(p => {
@@ -56,13 +56,36 @@ function renderReview() {
       tdLabel.appendChild(document.createTextNode(provider.label));
       tr.appendChild(tdLabel);
 
-      // Value (read-only)
+      // Value (read-only) + net change
       const tdValue = document.createElement("td");
       tdValue.className = "value-cell";
       const isIndex = provider.category === "Index";
-      const prefix = isIndex ? "" : "£";
+      const prefix = isIndex ? "" : "\u00A3";
       tdValue.textContent = prefix + formatNumber(val);
+
+      // Net change vs prior month
+      const priorYM = getPreviousMonth(reviewMonth);
+      const priorEntry = entries[priorYM];
+      const priorVal = priorEntry ? (priorEntry.values[provider.id] || 0) : 0;
+      if (priorVal > 0 && val > 0) {
+        const delta = val - priorVal;
+        const deltaSpan = document.createElement("span");
+        deltaSpan.className = "net-change";
+        deltaSpan.style.color = delta >= 0 ? "var(--cat-saving)" : "var(--colour-danger)";
+        const arrow = delta >= 0 ? "\u25B2" : "\u25BC";
+        const pfx = isIndex ? "" : "\u00A3";
+        deltaSpan.textContent = ` ${arrow} ${pfx}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+        tdValue.appendChild(deltaSpan);
+      }
+
       tr.appendChild(tdValue);
+
+      // Chart icon
+      const tdChart = document.createElement("td");
+      tdChart.className = "chart-icon-cell";
+      tdChart.innerHTML = '<span class="chart-icon" title="View chart">\u{1F4C8}</span>';
+      tdChart.addEventListener("click", () => jumpToReports(provider.id));
+      tr.appendChild(tdChart);
 
       tbody.appendChild(tr);
     });
@@ -86,77 +109,49 @@ function renderReview() {
 }
 
 function renderReviewTotals() {
-  const entry = entries[reviewMonth];
-  const allProviders = getAllProviders();
-
-  let savingTotal = 0;
-  let investmentTotal = 0;
-  let pensionTotal = 0;
-
-  if (entry) {
-    allProviders.forEach(p => {
-      const val = entry.values[p.id];
-      if (val === undefined) return;
-      switch (p.category) {
-        case "Saving":     savingTotal += val; break;
-        case "Investment": investmentTotal += val; break;
-        case "Pension":    pensionTotal += val; break;
-      }
-    });
-  }
-
-  const savingsInvestments = savingTotal + investmentTotal;
-  const grandTotal = savingTotal + investmentTotal + pensionTotal;
+  const t = calculateTotalsForMonth(reviewMonth);
 
   const rows = [
-    { label: "Savings + Investments", value: savingsInvestments, cat: "saving-investment" },
-    { label: "Savings only",         value: savingTotal,         cat: "Saving" },
-    { label: "Investments only",     value: investmentTotal,     cat: "Investment" },
-    { label: "Pension",              value: pensionTotal,        cat: "Pension" },
-    { label: "Grand Total",          value: grandTotal,          cat: "grand-total" },
+    { label: "Savings + Investments", value: t.savingsInvestments, cat: "saving-investment" },
+    { label: "Savings only",         value: t.saving,              cat: "Saving" },
+    { label: "Investments only",     value: t.investment,           cat: "Investment" },
+    { label: "Pension",              value: t.pension,              cat: "Pension" },
+    { label: "Grand Total",          value: t.grandTotal,           cat: "grand-total" },
   ];
 
+  const totalsKeys = ["total-si", "total-s", "total-i", "total-p", "total-grand"];
+
   const section = document.getElementById("review-totals");
-  section.innerHTML = rows.map(r =>
+  section.innerHTML = rows.map((r, i) =>
     `<div class="totals-row totals-${r.cat}">` +
       `<span class="totals-label">${r.label}</span>` +
-      `<span class="totals-value">£${formatNumber(r.value)}</span>` +
+      `<span class="totals-value">\u00A3${formatNumber(r.value)}</span>` +
+      `<span class="chart-icon totals-chart-icon" data-row="${totalsKeys[i]}" title="View chart">\u{1F4C8}</span>` +
     `</div>`
   ).join("");
+
+  section.querySelectorAll(".totals-chart-icon").forEach(icon => {
+    icon.addEventListener("click", () => jumpToReports(icon.dataset.row));
+  });
 }
 
 // ── 3-month summary table ──
 
 function renderSummaryTable() {
   const months = getMonthRange(reviewMonth, 3);
-  const allProviders = getAllProviders();
 
   // Calculate totals for each month
   const monthTotals = months.map(ym => {
-    const entry = entries[ym];
-    let saving = 0, investment = 0, pension = 0;
-
-    if (entry) {
-      allProviders.forEach(p => {
-        const val = entry.values[p.id];
-        if (val === undefined) return;
-        switch (p.category) {
-          case "Saving":     saving += val; break;
-          case "Investment": investment += val; break;
-          case "Pension":    pension += val; break;
-        }
-      });
-    }
-
+    const t = calculateTotalsForMonth(ym);
     return {
       yearMonth: ym,
       label: formatMonthLabel(ym),
       shortLabel: formatShortMonth(ym),
-      savingsInvestments: saving + investment,
-      saving,
-      investment,
-      pension,
-      grandTotal: saving + investment + pension,
+      savingsInvestments: t.savingsInvestments,
+      saving: t.saving,
+      investment: t.investment,
+      pension: t.pension,
+      grandTotal: t.grandTotal,
     };
   });
 

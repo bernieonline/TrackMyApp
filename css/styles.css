@@ -720,6 +720,300 @@ tr.inactive-row {
   opacity: 0.5;
 }
 
+/* ── Reports view ── */
+.reports-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+}
+
+.reports-controls label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.reports-controls select {
+  font-size: var(--font-input);
+  min-height: var(--tap-target);
+  padding: 6px 12px;
+  border: 1px solid var(--colour-border);
+  border-radius: 6px;
+  background: var(--colour-surface);
+  color: var(--colour-text);
+  flex: 1;
+  max-width: 400px;
+}
+
+.reports-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.range-btn,
+.ma-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 6px 14px;
+  border: 2px solid var(--colour-border);
+  border-radius: 6px;
+  background: var(--colour-surface);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.range-btn.active,
+.ma-btn.active {
+  background: var(--colour-primary);
+  color: var(--colour-header-text);
+  border-color: var(--colour-primary);
+}
+
+.range-btn:not(.active):hover,
+.ma-btn:not(.active):hover {
+  background: #e8e8e8;
+}
+
+.custom-range-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.custom-range-fields select {
+  font-size: 0.9rem;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid var(--colour-border);
+  border-radius: 4px;
+}
+
+.custom-range-fields span {
+  color: var(--colour-text-muted);
+}
+
+/* Growth rate callout */
+.growth-callout {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  text-align: center;
+}
+
+.growth-pct {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.growth-range {
+  margin-left: 12px;
+  color: var(--colour-text-muted);
+}
+
+.growth-positive .growth-pct { color: var(--cat-saving); }
+.growth-negative .growth-pct { color: var(--colour-danger); }
+
+/* Chart containers */
+.chart-container {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  position: relative;
+  min-height: 300px;
+}
+
+.chart-container h3 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  color: var(--colour-header-bg);
+}
+
+/* Moving average controls */
+.ma-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  color: var(--colour-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* Pie charts section */
+.pie-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.pie-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.chart-container-half {
+  flex: 1;
+  min-width: 280px;
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  padding: var(--spacing-md);
+}
+
+.chart-container-half h3 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  color: var(--colour-header-bg);
+}
+
+.pie-month-select-wrapper {
+  margin-bottom: var(--spacing-sm);
+}
+
+.pie-month-select-wrapper label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.pie-month-select-wrapper select {
+  font-size: 0.9rem;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid var(--colour-border);
+  border-radius: 4px;
+}
+
+/* Best/worst performer cards */
+.best-worst-callout {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-md);
+}
+
+.perf-card {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--spacing-md);
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  text-align: center;
+}
+
+.perf-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--colour-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.perf-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.perf-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.perf-value.growth-positive { color: var(--cat-saving); }
+.perf-value.growth-negative { color: var(--colour-danger); }
+
+/* FTSE comparison card */
+.ftse-comparison {
+  margin-bottom: var(--spacing-md);
+}
+
+.ftse-card {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  border: 1px solid var(--colour-border);
+  padding: var(--spacing-md);
+}
+
+.ftse-card h3 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  color: var(--colour-header-bg);
+}
+
+.ftse-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  justify-content: space-around;
+}
+
+.ftse-item {
+  text-align: center;
+}
+
+.ftse-item-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--colour-text-muted);
+  margin-bottom: 2px;
+}
+
+.ftse-item-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.ftse-no-data {
+  color: var(--colour-text-muted);
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* Chart icon in data tables */
+.chart-icon-cell {
+  text-align: center;
+  width: 40px;
+}
+
+.chart-icon {
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.chart-icon:hover {
+  opacity: 1;
+}
+
+.totals-chart-icon {
+  margin-left: var(--spacing-sm);
+}
+
+/* Net change indicator */
+.net-change {
+  font-size: 0.75rem;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
 /* ── iPad landscape (~1024px) ── */
 @media (min-width: 768px) {
   body {

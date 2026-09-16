@@ -123,3 +123,34 @@ function getMonthRange(yearMonth, count) {
   }
   return months;
 }
+
+/**
+ * Calculate category totals for a given YYYY-MM.
+ * Returns { saving, investment, pension, savingsInvestments, grandTotal }
+ * Index providers are excluded from all totals.
+ */
+function calculateTotalsForMonth(yearMonth) {
+  const entry = entries[yearMonth];
+  const allProviders = getAllProviders();
+  let saving = 0, investment = 0, pension = 0;
+
+  if (entry) {
+    allProviders.forEach(p => {
+      const val = entry.values[p.id];
+      if (val === undefined) return;
+      switch (p.category) {
+        case "Saving":     saving += val; break;
+        case "Investment": investment += val; break;
+        case "Pension":    pension += val; break;
+      }
+    });
+  }
+
+  return {
+    saving,
+    investment,
+    pension,
+    savingsInvestments: saving + investment,
+    grandTotal: saving + investment + pension
+  };
+}

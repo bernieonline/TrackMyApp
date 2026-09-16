@@ -24,6 +24,7 @@
   <div class="view-toggle">
     <button id="btn-view-entry" class="view-tab active" type="button">Entry</button>
     <button id="btn-view-review" class="view-tab" type="button">Review</button>
+    <button id="btn-view-reports" class="view-tab" type="button">Reports</button>
     <span class="controls-spacer"></span>
     <button id="btn-save" class="btn-primary" type="button">Save</button>
     <button id="btn-export" class="btn-edit" type="button">Export</button>
@@ -76,7 +77,7 @@
     <div class="provider-table-wrapper">
       <table class="provider-table">
         <thead>
-          <tr><th>Provider</th><th style="text-align:right">Value</th></tr>
+          <tr><th>Provider</th><th style="text-align:right">Value</th><th style="width:40px"></th></tr>
         </thead>
         <tbody id="review-tbody"></tbody>
       </table>
@@ -111,6 +112,77 @@
         <table id="spreadsheet-table" class="spreadsheet-table"></table>
       </div>
     </div>
+  </div>
+
+  <!-- ═══ REPORTS VIEW ═══ -->
+  <div id="reports-view" hidden>
+    <!-- Row selector + date range controls -->
+    <div class="reports-controls">
+      <label for="reports-row-select">Show</label>
+      <select id="reports-row-select"></select>
+    </div>
+
+    <!-- Date range -->
+    <div class="reports-range">
+      <button class="range-btn" data-range="3" type="button">3m</button>
+      <button class="range-btn" data-range="6" type="button">6m</button>
+      <button class="range-btn active" data-range="12" type="button">12m</button>
+      <button class="range-btn" data-range="custom" type="button">Custom</button>
+      <div id="custom-range-fields" class="custom-range-fields" hidden>
+        <select id="range-start-month"></select>
+        <select id="range-start-year"></select>
+        <span>to</span>
+        <select id="range-end-month"></select>
+        <select id="range-end-year"></select>
+      </div>
+    </div>
+
+    <!-- Growth rate callout -->
+    <div id="growth-rate-callout" class="growth-callout"></div>
+
+    <!-- Trend chart -->
+    <div class="chart-container">
+      <canvas id="trend-chart"></canvas>
+    </div>
+
+    <!-- Moving average controls -->
+    <div class="ma-controls">
+      <span>Moving avg:</span>
+      <button class="ma-btn active" data-ma="3" type="button">3m</button>
+      <button class="ma-btn" data-ma="6" type="button">6m</button>
+      <button class="ma-btn" data-ma="12" type="button">12m</button>
+    </div>
+
+    <!-- Pie charts -->
+    <div class="pie-section">
+      <div class="pie-row">
+        <div class="chart-container-half">
+          <h3>Category Allocation</h3>
+          <div class="pie-month-select-wrapper">
+            <label for="pie-month-select">Month</label>
+            <select id="pie-month-select"></select>
+          </div>
+          <canvas id="allocation-pie"></canvas>
+        </div>
+        <div class="chart-container-half">
+          <h3>Provider Breakdown</h3>
+          <canvas id="savings-pie"></canvas>
+          <canvas id="investments-pie"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allocation drift -->
+    <div class="chart-container">
+      <h3>Allocation Over Time</h3>
+      <canvas id="allocation-drift-chart"></canvas>
+    </div>
+
+    <!-- Best/worst provider -->
+    <div id="best-worst-callout" class="best-worst-callout"></div>
+
+    <!-- FTSE comparison -->
+    <div id="ftse-comparison" class="ftse-comparison"></div>
   </div>
 
   <!-- Add provider dialog -->
@@ -171,6 +243,7 @@
   </div>
 
   <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="js/providers.js"></script>
   <script src="js/data.js"></script>
   <script src="js/storage.js"></script>
@@ -178,6 +251,7 @@
   <script src="js/crypto-ui.js"></script>
   <script src="js/onedrive.js"></script>
   <script src="js/review.js"></script>
+  <script src="js/charts.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

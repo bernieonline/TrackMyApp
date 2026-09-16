@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // View toggle
   document.getElementById("btn-view-entry").addEventListener("click", () => switchView("entry"));
   document.getElementById("btn-view-review").addEventListener("click", () => switchView("review"));
+  document.getElementById("btn-view-reports").addEventListener("click", () => switchView("reports"));
 
   // Review navigation
   document.getElementById("btn-prev-month").addEventListener("click", () => stepMonth(-1));
@@ -115,6 +116,7 @@ function render() {
   headerHtml += "<th>Provider</th>";
   if (editMode) headerHtml += "<th>Category</th>";
   headerHtml += '<th style="text-align:right">Value</th>';
+  headerHtml += '<th style="width:40px"></th>';
   headerHtml += "</tr>";
   thead.innerHTML = headerHtml;
 
@@ -231,7 +233,32 @@ function render() {
     });
 
     tdValue.appendChild(valueInput);
+
+    // Net change vs prior month
+    const priorYM = getPreviousMonth(yearMonth);
+    const priorEntry = entries[priorYM];
+    const priorVal = priorEntry ? (priorEntry.values[provider.id] || 0) : 0;
+    const curVal = entry.values[provider.id] || 0;
+    if (priorVal > 0 && curVal > 0) {
+      const delta = curVal - priorVal;
+      const deltaSpan = document.createElement("span");
+      deltaSpan.className = "net-change";
+      deltaSpan.style.color = delta >= 0 ? "var(--cat-saving)" : "var(--colour-danger)";
+      const arrow = delta >= 0 ? "\u25B2" : "\u25BC";
+      const isIdx = provider.category === "Index";
+      const prefix = isIdx ? "" : "\u00A3";
+      deltaSpan.textContent = ` ${arrow} ${prefix}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+      tdValue.appendChild(deltaSpan);
+    }
+
     tr.appendChild(tdValue);
+
+    // Chart icon
+    const tdChart = document.createElement("td");
+    tdChart.className = "chart-icon-cell";
+    tdChart.innerHTML = '<span class="chart-icon" title="View chart">\u{1F4C8}</span>';
+    tdChart.addEventListener("click", () => jumpToReports(provider.id));
+    tr.appendChild(tdChart);
 
     tbody.appendChild(tr);
   });
@@ -243,42 +270,30 @@ function render() {
 // ── Totals ──
 function renderTotals() {
   const yearMonth = formatYearMonth(selectedYear, selectedMonth);
-  const entry = getEntry(yearMonth);
-  const activeProviders = getActiveProviders();
-
-  let savingTotal = 0;
-  let investmentTotal = 0;
-  let pensionTotal = 0;
-
-  activeProviders.forEach(p => {
-    const val = entry.values[p.id];
-    if (val === undefined) return;
-    switch (p.category) {
-      case "Saving":     savingTotal += val; break;
-      case "Investment": investmentTotal += val; break;
-      case "Pension":    pensionTotal += val; break;
-      // Index excluded from all totals
-    }
-  });
-
-  const savingsInvestments = savingTotal + investmentTotal;
-  const grandTotal = savingTotal + investmentTotal + pensionTotal;
+  const t = calculateTotalsForMonth(yearMonth);
 
   const rows = [
-    { label: "Savings + Investments", value: savingsInvestments, cat: "saving-investment" },
-    { label: "Savings only",         value: savingTotal,         cat: "Saving" },
-    { label: "Investments only",     value: investmentTotal,     cat: "Investment" },
-    { label: "Pension",              value: pensionTotal,        cat: "Pension" },
-    { label: "Grand Total",          value: grandTotal,          cat: "grand-total" },
+    { label: "Savings + Investments", value: t.savingsInvestments, cat: "saving-investment" },
+    { label: "Savings only",         value: t.saving,              cat: "Saving" },
+    { label: "Investments only",     value: t.investment,           cat: "Investment" },
+    { label: "Pension",              value: t.pension,              cat: "Pension" },
+    { label: "Grand Total",          value: t.grandTotal,           cat: "grand-total" },
   ];
 
+  const totalsKeys = ["total-si", "total-s", "total-i", "total-p", "total-grand"];
+
   const section = document.getElementById("totals-section");
-  section.innerHTML = rows.map(r =>
+  section.innerHTML = rows.map((r, i) =>
     `<div class="totals-row totals-${r.cat}">` +
       `<span class="totals-label">${r.label}</span>` +
-      `<span class="totals-value">£${formatNumber(r.value)}</span>` +
+      `<span class="totals-value">\u00A3${formatNumber(r.value)}</span>` +
+      `<span class="chart-icon totals-chart-icon" data-row="${totalsKeys[i]}" title="View chart">\u{1F4C8}</span>` +
     `</div>`
   ).join("");
+
+  section.querySelectorAll(".totals-chart-icon").forEach(icon => {
+    icon.addEventListener("click", () => jumpToReports(icon.dataset.row));
+  });
 }
 
 function formatNumber(n) {
@@ -530,13 +545,14 @@ function switchView(view) {
 
   document.getElementById("entry-view").hidden = (view !== "entry");
   document.getElementById("review-view").hidden = (view !== "review");
+  document.getElementById("reports-view").hidden = (view !== "reports");
 
   document.getElementById("btn-view-entry").classList.toggle("active", view === "entry");
   document.getElementById("btn-view-review").classList.toggle("active", view === "review");
+  document.getElementById("btn-view-reports").classList.toggle("active", view === "reports");
 
-  if (view === "review") {
-    initReview();
-  }
+  if (view === "review") initReview();
+  if (view === "reports") initReports();
 }
 
 function openSpreadsheet() {
