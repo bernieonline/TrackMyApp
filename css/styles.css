@@ -835,12 +835,7 @@ tr.inactive-row {
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
   position: relative;
-  height: 340px;
-}
-
-.chart-container canvas {
-  width: 100% !important;
-  max-height: 300px;
+  overflow: hidden;
 }
 
 .chart-container h3 {
@@ -878,11 +873,7 @@ tr.inactive-row {
   border-radius: 8px;
   border: 1px solid var(--colour-border);
   padding: var(--spacing-md);
-}
-
-.chart-container-half canvas {
-  width: 100% !important;
-  max-height: 260px;
+  overflow: hidden;
 }
 
 .chart-container-half h3 {

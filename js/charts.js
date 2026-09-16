@@ -330,7 +330,7 @@ function renderTrendChart() {
     data: { labels, datasets },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: true,
       plugins: {
         legend: { display: true, position: "top" },
         tooltip: {
@@ -551,7 +551,7 @@ function renderAllocationDrift() {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: true,
       scales: {
         y: { stacked: true, max: 100, ticks: { callback: v => v + "%" } },
         x: { stacked: true }
