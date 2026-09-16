@@ -538,7 +538,15 @@ function renderAllocationDrift() {
 
   if (driftChartInstance) driftChartInstance.destroy();
 
-  const ctx = document.getElementById("allocation-drift-chart").getContext("2d");
+  const canvas = document.getElementById("allocation-drift-chart");
+  const container = canvas.parentElement;
+  const width = container.clientWidth - 32; // account for padding
+  canvas.width = width;
+  canvas.height = Math.round(width / 2);
+  canvas.style.width = width + "px";
+  canvas.style.height = Math.round(width / 2) + "px";
+
+  const ctx = canvas.getContext("2d");
   driftChartInstance = new Chart(ctx, {
     type: "line",
     data: {
@@ -550,8 +558,7 @@ function renderAllocationDrift() {
       ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
+      responsive: false,
       scales: {
         y: { stacked: true, max: 100, ticks: { callback: v => v + "%" } },
         x: { stacked: true }
