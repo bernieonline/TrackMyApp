@@ -60,23 +60,27 @@ function renderReview() {
       const tdValue = document.createElement("td");
       tdValue.className = "value-cell";
       const isIndex = provider.category === "Index";
-      const prefix = isIndex ? "" : "\u00A3";
-      tdValue.textContent = prefix + formatNumber(val);
 
-      // Net change vs prior month
+      // Net change vs prior month (before value for alignment)
       const priorYM = getPreviousMonth(reviewMonth);
       const priorEntry = entries[priorYM];
       const priorVal = priorEntry ? (priorEntry.values[provider.id] || 0) : 0;
+      const deltaSpan = document.createElement("span");
+      deltaSpan.className = "net-change";
       if (priorVal > 0 && val > 0) {
         const delta = val - priorVal;
-        const deltaSpan = document.createElement("span");
-        deltaSpan.className = "net-change";
         deltaSpan.style.color = delta >= 0 ? "var(--cat-saving)" : "var(--colour-danger)";
         const arrow = delta >= 0 ? "\u25B2" : "\u25BC";
         const pfx = isIndex ? "" : "\u00A3";
-        deltaSpan.textContent = ` ${arrow} ${pfx}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-        tdValue.appendChild(deltaSpan);
+        deltaSpan.textContent = `${arrow} ${pfx}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
       }
+      tdValue.appendChild(deltaSpan);
+
+      // £ and value
+      const prefix = isIndex ? "" : "\u00A3";
+      const valueSpan = document.createElement("span");
+      valueSpan.textContent = prefix + formatNumber(val);
+      tdValue.appendChild(valueSpan);
 
       tr.appendChild(tdValue);
 
