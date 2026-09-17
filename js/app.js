@@ -182,13 +182,6 @@ function render() {
 
     const isIndex = provider.category === "Index";
 
-    if (!isIndex) {
-      const currSymbol = document.createElement("span");
-      currSymbol.className = "currency-symbol";
-      currSymbol.textContent = "£";
-      tdValue.appendChild(currSymbol);
-    }
-
     const valueInput = document.createElement("input");
     valueInput.type = "number";
     valueInput.className = "value-input";
@@ -248,6 +241,13 @@ function render() {
       deltaSpan.textContent = `${arrow} ${prefix}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
     }
     tdValue.appendChild(deltaSpan);
+
+    if (!isIndex) {
+      const currSymbol = document.createElement("span");
+      currSymbol.className = "currency-symbol";
+      currSymbol.textContent = "£";
+      tdValue.appendChild(currSymbol);
+    }
 
     tdValue.appendChild(valueInput);
 
