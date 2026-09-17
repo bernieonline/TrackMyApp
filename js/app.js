@@ -232,24 +232,24 @@ function render() {
       }
     });
 
-    tdValue.appendChild(valueInput);
-
-    // Net change vs prior month
+    // Net change vs prior month (inserted before input for alignment)
     const priorYM = getPreviousMonth(yearMonth);
     const priorEntry = entries[priorYM];
     const priorVal = priorEntry ? (priorEntry.values[provider.id] || 0) : 0;
     const curVal = entry.values[provider.id] || 0;
+    const deltaSpan = document.createElement("span");
+    deltaSpan.className = "net-change";
     if (priorVal > 0 && curVal > 0) {
       const delta = curVal - priorVal;
-      const deltaSpan = document.createElement("span");
-      deltaSpan.className = "net-change";
       deltaSpan.style.color = delta >= 0 ? "var(--cat-saving)" : "var(--colour-danger)";
       const arrow = delta >= 0 ? "\u25B2" : "\u25BC";
       const isIdx = provider.category === "Index";
       const prefix = isIdx ? "" : "\u00A3";
-      deltaSpan.textContent = ` ${arrow} ${prefix}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-      tdValue.appendChild(deltaSpan);
+      deltaSpan.textContent = `${arrow} ${prefix}${Math.abs(delta).toLocaleString("en-GB", {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
     }
+    tdValue.appendChild(deltaSpan);
+
+    tdValue.appendChild(valueInput);
 
     tr.appendChild(tdValue);
 
