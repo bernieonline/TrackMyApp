@@ -864,6 +864,10 @@ tr.inactive-row {
   margin-bottom: 0;
 }
 
+.adjusted-btn[hidden] {
+  display: none !important;
+}
+
 .adjusted-btn {
   padding: 8px 14px;
   font-size: var(--font-button);
