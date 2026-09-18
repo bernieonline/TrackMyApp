@@ -11,6 +11,7 @@ let savingsPieInstance = null;
 let investmentsPieInstance = null;
 let driftChartInstance = null;
 let reportsInitialised = false;
+let showAdjusted = false;        // toggle for cash-flow-adjusted overlay
 
 // Totals row keys (used in dropdown alongside provider IDs)
 const TOTALS_ROWS = [
@@ -82,6 +83,7 @@ function bindReportsEvents() {
   document.getElementById("reports-row-select").addEventListener("change", (e) => {
     const val = e.target.value;
     reportsSelectedRow = isNaN(val) ? val : parseInt(val);
+    showAdjusted = false;
     renderReports();
   });
 
@@ -111,6 +113,13 @@ function bindReportsEvents() {
       reportsMaPeriod = parseInt(btn.dataset.ma);
       renderReports();
     });
+  });
+
+  // Adjusted overlay toggle
+  document.getElementById("btn-adjusted").addEventListener("click", () => {
+    showAdjusted = !showAdjusted;
+    renderTrendChart();
+    renderGrowthCallout();
   });
 }
 
@@ -234,6 +243,122 @@ function getSeriesData(months) {
   return months.map(ym => getValueForRow(ym, reportsSelectedRow));
 }
 
+/**
+ * Build an adjusted series: actual values with cumulative cash flows removed.
+ * For a single provider: subtract cumulative cashFlows (investments) or
+ * add back cumulative monthlyWithdrawal (pension).
+ * For totals rows: sum adjustments across all providers in that category.
+ */
+function getAdjustedSeriesData(months) {
+  const row = reportsSelectedRow;
+
+  if (typeof row === "number") {
+    // Single provider
+    return getAdjustedProviderSeries(row, months);
+  }
+
+  // Totals row — sum adjusted values across relevant providers
+  const categoryMap = {
+    "total-i":     ["Investment"],
+    "total-p":     ["Pension"],
+    "total-si":    ["Saving", "Investment"],
+    "total-grand": ["Saving", "Investment", "Pension"],
+    "total-s":     ["Saving"],
+  };
+  const cats = categoryMap[row];
+  if (!cats) return null;
+
+  const relevantProviders = getAllProviders().filter(p => cats.includes(p.category));
+  // Only build adjusted if at least one provider has cash flows
+  const hasCF = relevantProviders.some(p => providerHasCashFlows(p.id, months));
+  if (!hasCF) return null;
+
+  return months.map((ym, i) => {
+    let total = 0;
+    relevantProviders.forEach(p => {
+      const adjusted = getAdjustedProviderSeries(p.id, months);
+      if (adjusted) {
+        total += adjusted[i];
+      } else {
+        // No cash flows for this provider — use raw value
+        const entry = entries[ym];
+        total += entry ? (entry.values[p.id] || 0) : 0;
+      }
+    });
+    return total;
+  });
+}
+
+/**
+ * Get adjusted series for a single provider.
+ * Returns null if the provider has no cash flows in the range.
+ */
+function getAdjustedProviderSeries(providerId, months) {
+  const provider = getAllProviders().find(p => p.id === providerId);
+  if (!provider) return null;
+  if (!providerHasCashFlows(providerId, months)) return null;
+
+  let cumulative = 0;
+  return months.map((ym, i) => {
+    const entry = entries[ym];
+    const actual = entry ? (entry.values[providerId] || 0) : 0;
+
+    if (provider.category === "Pension") {
+      // Add back cumulative withdrawals
+      if (i > 0) cumulative += getProviderMonthlyWithdrawal(providerId);
+      return actual + cumulative;
+    }
+
+    if (provider.category === "Investment") {
+      // Subtract cumulative contributions (positive CF = money in)
+      cumulative += getCashFlow(ym, providerId);
+      return actual - cumulative;
+    }
+
+    return actual;
+  });
+}
+
+/**
+ * Check if a provider has any cash flows in the given month range.
+ */
+function providerHasCashFlows(providerId, months) {
+  const provider = getAllProviders().find(p => p.id === providerId);
+  if (!provider) return false;
+
+  if (provider.category === "Pension") {
+    return getProviderMonthlyWithdrawal(providerId) > 0;
+  }
+
+  if (provider.category === "Investment") {
+    return months.some(m => getCashFlow(m, providerId) !== 0);
+  }
+
+  return false;
+}
+
+/**
+ * Check if the currently selected row has any cash flows in the range.
+ */
+function selectedRowHasCashFlows(months) {
+  const row = reportsSelectedRow;
+  if (typeof row === "number") {
+    return providerHasCashFlows(row, months);
+  }
+  // Totals rows — check if any provider in the relevant categories has cash flows
+  const categoryMap = {
+    "total-i":     ["Investment"],
+    "total-p":     ["Pension"],
+    "total-si":    ["Saving", "Investment"],
+    "total-grand": ["Saving", "Investment", "Pension"],
+  };
+  const cats = categoryMap[row];
+  if (!cats) return false;
+  return getAllProviders()
+    .filter(p => cats.includes(p.category))
+    .some(p => providerHasCashFlows(p.id, months));
+}
+
 function getRowColour(row) {
   if (typeof row === "number") {
     const provider = getAllProviders().find(p => p.id === row);
@@ -332,6 +457,14 @@ function renderTrendChart() {
     return;
   }
 
+  // Show/hide the adjusted toggle button
+  const adjBtn = document.getElementById("btn-adjusted");
+  const hasCF = selectedRowHasCashFlows(months);
+  adjBtn.hidden = !hasCF;
+  if (!hasCF) showAdjusted = false;
+  adjBtn.textContent = showAdjusted ? "Show actual only" : "Show adjusted";
+  adjBtn.classList.toggle("active", showAdjusted);
+
   const labels = months.map(formatShortMonth);
   const data = getSeriesData(months);
   const ma = calculateMovingAverage(data, reportsMaPeriod);
@@ -363,6 +496,25 @@ function renderTrendChart() {
       borderWidth: 1,
       type: "bar",
     });
+  }
+
+  // Adjusted overlay (dashed line showing values with cash flows removed)
+  if (showAdjusted) {
+    const adjustedData = getAdjustedSeriesData(months);
+    if (adjustedData) {
+      datasets.push({
+        label: "Adjusted (excl. cash flows)",
+        data: adjustedData,
+        borderColor: "#8e44ad",
+        borderWidth: 2.5,
+        borderDash: [8, 4],
+        pointRadius: 4,
+        pointStyle: "triangle",
+        type: "line",
+        fill: false,
+        tension: 0.3,
+      });
+    }
   }
 
   // Moving average line
@@ -425,9 +577,25 @@ function renderGrowthCallout() {
   const cls = rate >= 0 ? "growth-positive" : "growth-negative";
 
   el.className = "growth-callout " + cls;
-  el.innerHTML =
+  let html =
     `<span class="growth-pct">${arrow} ${sign}${rate.toFixed(1)}%</span>` +
     `<span class="growth-range">\u00A3${formatNumber(firstNonZero)} \u2192 \u00A3${formatNumber(lastVal)}</span>`;
+
+  // Show adjusted growth alongside when toggle is active
+  if (showAdjusted) {
+    const adjData = getAdjustedSeriesData(months);
+    if (adjData) {
+      const adjRate = calculateGrowthRate(adjData);
+      if (adjRate !== null) {
+        const adjSign = adjRate >= 0 ? "+" : "";
+        const adjArrow = adjRate >= 0 ? "\u25B2" : "\u25BC";
+        const adjCls = adjRate >= 0 ? "growth-positive" : "growth-negative";
+        html += `<span class="growth-adjusted ${adjCls}">Adjusted: ${adjArrow} ${adjSign}${adjRate.toFixed(1)}%</span>`;
+      }
+    }
+  }
+
+  el.innerHTML = html;
 }
 
 // ── Render: Pie charts ──

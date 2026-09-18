@@ -851,6 +851,45 @@ tr.inactive-row {
 .growth-positive .growth-pct { color: var(--cat-saving); }
 .growth-negative .growth-pct { color: var(--colour-danger); }
 
+/* Growth row: callout + adjusted toggle side by side */
+.growth-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.growth-row .growth-callout {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.adjusted-btn {
+  padding: 8px 14px;
+  font-size: var(--font-button);
+  border: 2px solid #8e44ad;
+  border-radius: 6px;
+  background: var(--colour-surface);
+  color: #8e44ad;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.adjusted-btn.active {
+  background: #8e44ad;
+  color: #fff;
+}
+
+.growth-adjusted {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.growth-adjusted.growth-positive { color: var(--cat-saving); }
+.growth-adjusted.growth-negative { color: var(--colour-danger); }
+
 /* Chart containers */
 .chart-container {
   background: var(--colour-surface);
