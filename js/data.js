@@ -5,7 +5,11 @@ const entries = {};
 
 function getEntry(yearMonth) {
   if (!entries[yearMonth]) {
-    entries[yearMonth] = { values: {}, comment: "" };
+    entries[yearMonth] = { values: {}, comment: "", cashFlows: {} };
+  }
+  // Backward compat: ensure cashFlows exists on old entries
+  if (!entries[yearMonth].cashFlows) {
+    entries[yearMonth].cashFlows = {};
   }
   return entries[yearMonth];
 }
@@ -29,6 +33,21 @@ function setProviderValue(yearMonth, providerId, value) {
 function setComment(yearMonth, text) {
   const entry = getEntry(yearMonth);
   entry.comment = text;
+}
+
+function setCashFlow(yearMonth, providerId, amount) {
+  const entry = getEntry(yearMonth);
+  if (amount === null || amount === undefined || amount === "" || amount === 0) {
+    delete entry.cashFlows[providerId];
+  } else {
+    entry.cashFlows[providerId] = parseFloat(amount);
+  }
+}
+
+function getCashFlow(yearMonth, providerId) {
+  const entry = entries[yearMonth];
+  if (!entry || !entry.cashFlows) return 0;
+  return entry.cashFlows[providerId] || 0;
 }
 
 /**

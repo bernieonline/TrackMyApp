@@ -14,7 +14,7 @@ const providers = [
   { id: 8,  label: "Vanguard Bernard",         category: "Investment", active: true },
   { id: 9,  label: "Aviva ISA Mary",           category: "Investment", active: true },
   { id: 10, label: "Aviva ISA Bernard",        category: "Investment", active: true },
-  { id: 11, label: "Aviva Pension Valuation",  category: "Pension",    active: true },
+  { id: 11, label: "Aviva Pension Valuation",  category: "Pension",    active: true, monthlyWithdrawal: 0 },
   { id: 12, label: "Leeds ISA Mary",           category: "Saving",     active: true },
   { id: 13, label: "Leeds ISA Bernard",        category: "Saving",     active: true },
   { id: 14, label: "Santander Mary",           category: "Saving",     active: true },
@@ -55,6 +55,16 @@ function updateProviderLabel(id, newLabel) {
 function toggleProviderActive(id) {
   const p = providers.find(p => p.id === id);
   if (p) p.active = !p.active;
+}
+
+function setProviderMonthlyWithdrawal(id, amount) {
+  const p = providers.find(p => p.id === id);
+  if (p) p.monthlyWithdrawal = amount;
+}
+
+function getProviderMonthlyWithdrawal(id) {
+  const p = providers.find(p => p.id === id);
+  return (p && p.monthlyWithdrawal) || 0;
 }
 
 function loadProviders(data) {

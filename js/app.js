@@ -115,6 +115,7 @@ function render() {
   if (editMode) headerHtml += '<th style="width:50px">Active</th>';
   headerHtml += "<th>Provider</th>";
   if (editMode) headerHtml += "<th>Category</th>";
+  if (editMode) headerHtml += '<th style="text-align:right">Cash flow</th>';
   headerHtml += '<th style="text-align:right">Value</th>';
   headerHtml += '<th style="width:40px"></th>';
   headerHtml += "</tr>";
@@ -174,6 +175,59 @@ function render() {
       catLabel.textContent = provider.category;
       tdCat.appendChild(catLabel);
       tr.appendChild(tdCat);
+    }
+
+    // Cash flow cell (edit mode only)
+    if (editMode) {
+      const tdCashFlow = document.createElement("td");
+      tdCashFlow.className = "cashflow-cell";
+
+      if (provider.category === "Pension") {
+        // Pension: fixed monthly withdrawal stored on the provider
+        const wdLabel = document.createElement("span");
+        wdLabel.className = "cashflow-label";
+        wdLabel.textContent = "£/mo drawn";
+        const wdInput = document.createElement("input");
+        wdInput.type = "number";
+        wdInput.className = "cashflow-input";
+        wdInput.step = "0.01";
+        wdInput.placeholder = "0.00";
+        wdInput.value = (provider.monthlyWithdrawal || 0) > 0 ? provider.monthlyWithdrawal.toFixed(2) : "";
+        wdInput.addEventListener("change", (e) => {
+          const val = parseFloat(e.target.value) || 0;
+          const rounded = Math.round(val * 100) / 100;
+          setProviderMonthlyWithdrawal(provider.id, rounded);
+          if (rounded > 0) e.target.value = rounded.toFixed(2);
+          else e.target.value = "";
+          saveDraft();
+        });
+        tdCashFlow.appendChild(wdLabel);
+        tdCashFlow.appendChild(wdInput);
+      } else if (provider.category === "Investment") {
+        // Investment: per-month cash flow (positive = in, negative = out)
+        const cfLabel = document.createElement("span");
+        cfLabel.className = "cashflow-label";
+        cfLabel.textContent = "£ in/out";
+        const cfInput = document.createElement("input");
+        cfInput.type = "number";
+        cfInput.className = "cashflow-input";
+        cfInput.step = "0.01";
+        cfInput.placeholder = "0.00";
+        const existing = getCashFlow(yearMonth, provider.id);
+        if (existing !== 0) cfInput.value = existing.toFixed(2);
+        cfInput.addEventListener("change", (e) => {
+          const val = parseFloat(e.target.value) || 0;
+          const rounded = Math.round(val * 100) / 100;
+          setCashFlow(yearMonth, provider.id, rounded);
+          if (rounded !== 0) e.target.value = rounded.toFixed(2);
+          else e.target.value = "";
+          saveDraft();
+        });
+        tdCashFlow.appendChild(cfLabel);
+        tdCashFlow.appendChild(cfInput);
+      }
+      // Saving and Index: leave cell empty
+      tr.appendChild(tdCashFlow);
     }
 
     // Value input

@@ -271,6 +271,58 @@ function calculateGrowthRate(data) {
   return ((lastVal - firstNonZero) / firstNonZero) * 100;
 }
 
+/**
+ * Calculate cash-flow-adjusted growth for a provider over a month range.
+ * - Pension: adds back monthlyWithdrawal * number of months
+ * - Investment: subtracts net cash flows (contributions/withdrawals)
+ * - Index: simple % change
+ * Returns null if start value is 0 or missing.
+ */
+function calculateAdjustedGrowth(providerId, months) {
+  const provider = getAllProviders().find(p => p.id === providerId);
+  if (!provider) return null;
+
+  const first = months[0];
+  const last = months[months.length - 1];
+  const startEntry = entries[first];
+  const endEntry = entries[last];
+  const startVal = startEntry ? (startEntry.values[providerId] || 0) : 0;
+  const endVal = endEntry ? (endEntry.values[providerId] || 0) : 0;
+
+  if (startVal <= 0) return null;
+
+  if (provider.category === "Pension") {
+    // Add back withdrawals to see true fund performance
+    const withdrawal = getProviderMonthlyWithdrawal(providerId);
+    const numMonths = months.length - 1; // periods between first and last
+    const adjustedEnd = endVal + (withdrawal * numMonths);
+    return ((adjustedEnd - startVal) / startVal) * 100;
+  }
+
+  if (provider.category === "Investment") {
+    // Subtract net contributions to isolate investment performance
+    let netCashFlows = 0;
+    for (const m of months) {
+      netCashFlows += getCashFlow(m, providerId);
+    }
+    return ((endVal - startVal - netCashFlows) / startVal) * 100;
+  }
+
+  // Index or other: simple % change
+  return ((endVal - startVal) / startVal) * 100;
+}
+
+/**
+ * Check whether a provider has data for every month in the range.
+ */
+function hasFullRangeData(providerId, months) {
+  for (const m of months) {
+    const entry = entries[m];
+    if (!entry || !entry.values[providerId]) return false;
+  }
+  return true;
+}
+
 // ── Render: Trend chart ──
 
 function renderTrendChart() {
@@ -579,26 +631,22 @@ function renderBestWorstCallout() {
     return;
   }
 
-  const first = months[0];
-  const last = months[months.length - 1];
   const providerGrowth = [];
 
+  // Only Investment + Pension; must have data for every month in range
   getAllProviders()
-    .filter(p => p.category !== "Index")
+    .filter(p => p.category === "Investment" || p.category === "Pension")
     .forEach(p => {
-      const startEntry = entries[first];
-      const endEntry = entries[last];
-      const startVal = startEntry ? (startEntry.values[p.id] || 0) : 0;
-      const endVal = endEntry ? (endEntry.values[p.id] || 0) : 0;
+      if (!hasFullRangeData(p.id, months)) return;
 
-      if (startVal > 0) {
-        const growth = ((endVal - startVal) / startVal) * 100;
+      const growth = calculateAdjustedGrowth(p.id, months);
+      if (growth !== null) {
         providerGrowth.push({ label: p.label, growth });
       }
     });
 
   if (providerGrowth.length < 2) {
-    el.innerHTML = "";
+    el.innerHTML = '<p class="perf-no-data">Need at least 2 investments with full-range data for comparison</p>';
     return;
   }
 
@@ -606,16 +654,36 @@ function renderBestWorstCallout() {
   const best = providerGrowth[0];
   const worst = providerGrowth[providerGrowth.length - 1];
 
+  // FTSE reference for context
+  const ftseProvider = getAllProviders().find(p => p.category === "Index");
+  let ftseHtml = "";
+  if (ftseProvider && hasFullRangeData(ftseProvider.id, months)) {
+    const ftseGrowth = calculateAdjustedGrowth(ftseProvider.id, months);
+    if (ftseGrowth !== null) {
+      const fmtPct = (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+      ftseHtml =
+        `<div class="perf-card perf-ftse">` +
+          `<span class="perf-label">${ftseProvider.label}</span>` +
+          `<span class="perf-value">${fmtPct(ftseGrowth)}</span>` +
+        `</div>`;
+    }
+  }
+
+  const fmtGrowth = (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+  const bestCls = best.growth >= 0 ? "growth-positive" : "growth-negative";
+  const worstCls = worst.growth >= 0 ? "growth-positive" : "growth-negative";
+
   el.innerHTML =
     `<div class="perf-card perf-best">` +
       `<span class="perf-label">Best</span>` +
       `<span class="perf-name">${best.label}</span>` +
-      `<span class="perf-value growth-positive">+${best.growth.toFixed(1)}%</span>` +
+      `<span class="perf-value ${bestCls}">${fmtGrowth(best.growth)}</span>` +
     `</div>` +
+    ftseHtml +
     `<div class="perf-card perf-worst">` +
       `<span class="perf-label">Worst</span>` +
       `<span class="perf-name">${worst.label}</span>` +
-      `<span class="perf-value growth-negative">${worst.growth.toFixed(1)}%</span>` +
+      `<span class="perf-value ${worstCls}">${fmtGrowth(worst.growth)}</span>` +
     `</div>`;
 }
 
@@ -643,13 +711,28 @@ function renderFtseComparison() {
   const ftseEnd = entries[last] ? (entries[last].values[ftseProvider.id] || 0) : 0;
   const ftseGrowth = ftseStart > 0 ? ((ftseEnd - ftseStart) / ftseStart) * 100 : null;
 
+  // Calculate adjusted portfolio growth: sum each investment's adjusted performance
+  const investmentProviders = getAllProviders().filter(p => p.category === "Investment");
   const totalsStart = calculateTotalsForMonth(first);
-  const totalsEnd = calculateTotalsForMonth(last);
   const invStart = totalsStart.investment;
-  const invEnd = totalsEnd.investment;
-  const portfolioGrowth = invStart > 0 ? ((invEnd - invStart) / invStart) * 100 : null;
 
-  if (ftseGrowth === null || portfolioGrowth === null) {
+  if (invStart <= 0) {
+    el.innerHTML = '<p class="ftse-no-data">Insufficient data for comparison</p>';
+    return;
+  }
+
+  // Sum net cash flows across all investment providers over the range
+  let totalNetCashFlows = 0;
+  for (const m of months) {
+    investmentProviders.forEach(p => {
+      totalNetCashFlows += getCashFlow(m, p.id);
+    });
+  }
+  const totalsEnd = calculateTotalsForMonth(last);
+  const invEnd = totalsEnd.investment;
+  const portfolioGrowth = ((invEnd - invStart - totalNetCashFlows) / invStart) * 100;
+
+  if (ftseGrowth === null) {
     el.innerHTML = '<p class="ftse-no-data">Insufficient data for comparison</p>';
     return;
   }

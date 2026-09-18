@@ -287,6 +287,30 @@ button {
   accent-color: var(--colour-primary);
 }
 
+/* ── Cash flow inputs (edit mode) ── */
+.cashflow-cell {
+  text-align: right;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.cashflow-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--colour-text-muted);
+  margin-bottom: 2px;
+}
+
+.cashflow-input {
+  font-size: var(--font-input);
+  font-family: inherit;
+  padding: 4px 8px;
+  width: 100px;
+  text-align: right;
+  border: 1px solid var(--colour-border);
+  border-radius: 4px;
+}
+
 /* ── Add provider dialog ── */
 .dialog-overlay {
   display: none;
@@ -939,6 +963,17 @@ tr.inactive-row {
 
 .perf-value.growth-positive { color: var(--cat-saving); }
 .perf-value.growth-negative { color: var(--colour-danger); }
+
+.perf-card.perf-ftse {
+  background: var(--colour-row-odd);
+  border-left: 3px solid var(--cat-index, #e67e22);
+}
+
+.perf-no-data {
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
 
 /* FTSE comparison card */
 .ftse-comparison {
