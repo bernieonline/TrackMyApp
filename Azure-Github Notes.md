@@ -57,6 +57,12 @@ lives in Azure (Microsoft's cloud platform). Think of it as
 an ID badge that the app shows to Microsoft when it asks to
 read or write your file.
 
+The app uses **MSAL.js** (Microsoft Authentication Library) to
+handle sign-in and token management. This is a standard
+Microsoft library loaded from Microsoft's CDN — the app does
+not include its own copy. MSAL handles the popup login flow,
+token caching, and silent token renewal.
+
 ### What was registered
 - **App name**: MyBGAccounts (or whatever it was named during
   registration)
@@ -100,6 +106,20 @@ These permissions are "delegated" meaning they only work when
 YOU are signed in. The app can't access your OneDrive without
 you actively logging in.
 
+### Session tokens and re-authentication
+When you sign in, Microsoft gives the app a temporary access
+token. This token is stored in your browser's **sessionStorage**,
+which means it is automatically cleared when you close the
+browser tab. That's why you need to sign in again each time
+you open the app in a new tab.
+
+While the tab is open, the token may expire (typically after
+an hour). The app handles this automatically — it tries to
+renew the token silently in the background. If silent renewal
+fails (for example, if your session has fully expired), a
+Microsoft login popup will appear so you can re-authenticate
+without losing your work.
+
 ### Where your data file lives on OneDrive
 - Folder: **MyBGAccounts** (in the root of your OneDrive)
 - File: **mybgaccounts.dat**
@@ -107,6 +127,43 @@ you actively logging in.
 - The file contains encrypted data — if you open it in
   OneDrive you'll just see a long string of random characters.
   That's normal.
+- The folder is created automatically the first time you sign
+  in and set up your passphrase — you don't need to create it
+  manually on OneDrive.
+
+### How OneDrive read/write works
+The app communicates with OneDrive through the **Microsoft
+Graph API** — a standard web interface that Microsoft provides
+for accessing OneDrive, Outlook, and other Microsoft 365
+services. The app only uses it for file operations.
+
+**Loading data (download):**
+1. The app requests the file's metadata from Graph API
+2. If the file doesn't exist (HTTP 404), this is a first run
+   — the app will prompt you to set up a passphrase and then
+   create the file immediately
+3. If the file exists, the app records the file's **ETag** (a
+   version stamp) and downloads the encrypted content
+4. You enter your passphrase and the data is decrypted locally
+
+**Saving data (upload):**
+1. The app encrypts your data locally using your passphrase
+2. It uploads the encrypted bundle to OneDrive via a PUT
+   request to the Graph API
+3. If you loaded the file earlier, the app sends the original
+   ETag in an "If-Match" header — this tells OneDrive "only
+   accept this upload if nobody else has changed the file
+   since I loaded it"
+4. If the file was modified by another device in the meantime,
+   OneDrive rejects the upload (HTTP 412) and the app warns
+   you to reload first — this prevents you from accidentally
+   overwriting changes made on another device
+5. On success, the app stores the new ETag for the next save
+
+This ETag-based conflict detection is a deliberate safety
+feature, not just error handling. It ensures that if you have
+the app open on both your PC and iPad, one device cannot
+silently overwrite changes saved by the other.
 
 ### If OneDrive save/load stops working
 - **"Sign-in failed"**: Check the redirect URI (see above).
@@ -116,11 +173,14 @@ you actively logging in.
   https://account.live.com/consent/Manage and check that
   MyBGAccounts still has permission. If not, sign out and
   sign back in — it will re-request permission.
-- **"Modified by another device" warning**: This is normal
-  if you had the app open on two devices. Reload to get the
-  latest version, then make your changes.
+- **"Modified by another device" warning**: This is the ETag
+  conflict detection working as intended. It means the file
+  on OneDrive has changed since you loaded it (probably from
+  another device). Reload to get the latest version, then
+  make your changes.
 - **File not found (first run)**: This is normal. The app
-  creates the file automatically when you first save.
+  creates the file automatically after you sign in and set
+  up your passphrase for the first time.
 
 
 ## How They Work Together — The Full Flow
@@ -128,20 +188,28 @@ you actively logging in.
 1. You open **https://bernieonline.github.io/TrackMyApp/**
    on your PC or iPad
 2. GitHub Pages serves the app files to your browser
-3. You click **Sign In** — the app uses the Azure client ID
-   to open a Microsoft login popup
-4. You sign in with your Microsoft account — Microsoft checks
+3. The app loads the MSAL.js library from Microsoft's CDN and
+   initialises the authentication client
+4. You click **Sign In** — MSAL opens a Microsoft login popup
+   using the Azure client ID
+5. You sign in with your Microsoft account — Microsoft checks
    that the app's client ID and redirect URI match what's
    registered in Azure
-5. Microsoft gives the app a temporary token (like a
-   time-limited pass) to access your OneDrive
-6. The app uses that token to download mybgaccounts.dat from
-   your OneDrive
-7. You enter your passphrase — the app decrypts the data
+6. Microsoft gives the app a temporary access token (stored
+   in sessionStorage, cleared when the tab closes)
+7. The app uses that token to call the Microsoft Graph API
+   and download mybgaccounts.dat from your OneDrive
+8. You enter your passphrase — the app decrypts the data
    locally in your browser (nothing unencrypted is sent
    anywhere)
-8. When you save, the app encrypts the data and uploads it
-   back to OneDrive using the same token
+9. You view or edit your data — changes are auto-saved to
+   localStorage as a draft, so nothing is lost if you
+   accidentally close the tab
+10. When you click Save, the app encrypts the data and uploads
+    it back to OneDrive via the Graph API, with ETag conflict
+    checking to prevent overwriting changes from other devices
+11. If the token expires while the tab is open, MSAL silently
+    renews it (or shows a login popup if silent renewal fails)
 
 **Important**: your passphrase never leaves your device. Azure
 and GitHub never see your actual financial data. Microsoft can
